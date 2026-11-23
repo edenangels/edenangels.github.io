@@ -45,7 +45,7 @@
   function show(text, link, retry) { say.textContent = text; go.hidden = !link; if (link) go.href = link; again.hidden = !retry; }
   function find() {
     show('', null, false); say.innerHTML = '<span class="dots">Opening</span>';
-    fetch('/link.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (d) {
+    fetch('/chat/link.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (d) {
       var url = String(d.url || '');
       if (!/^https:\/\/[a-z0-9.-]+$/.test(url)) throw 0;
       var done = false, probe = new Image();
