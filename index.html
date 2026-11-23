@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#4f7f5a">
+<title>EdenChat</title>
+<style>
+  :root { --bg: #f6f3ea; --panel: #fbfaf5; --text: #2a332c; --text-2: #6f786e; --green: #4f7f5a; --line: #e9e4d7; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #141b16; --panel: #1b241e; --text: #e7ebe0; --text-2: #94a194; --green: #6fa27b; --line: #27322a; } }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--text); font: 17px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; display: grid; place-items: center; padding: 24px 16px; }
+  main { width: 100%; max-width: 360px; text-align: center; }
+  .mark { width: 84px; height: 84px; display: block; margin: 0 auto 22px; }
+  h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -.01em; }
+  p { margin: 0 0 22px; color: var(--text-2); }
+  a.btn, button.btn { display: block; width: 100%; padding: 14px 18px; border-radius: 14px; border: 0; background: var(--green); color: #fff; font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; }
+  button.btn.quiet { background: none; color: var(--green); border: 1px solid var(--line); margin-top: 10px; }
+  [hidden] { display: none !important; }
+  .dots::after { content: ""; animation: dots 1.4s steps(4, end) infinite; }
+  @keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+  @media (prefers-reduced-motion: reduce) { .dots::after { animation: none; content: "..."; } }
+</style>
+</head>
+<body>
+<main>
+  <svg class="mark" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    <rect width="512" height="512" rx="112" fill="#4f7f5b"/>
+    <path d="M256 104c-88 0-160 64-160 144 0 36 15 69 40 94l-18 66 74-24c20 8 41 12 64 12 88 0 160-64 160-148s-72-144-160-144z" fill="#fff"/>
+    <path d="M190 300c0-66 44-110 132-116 0 82-40 128-104 128-10 0-20-4-28-12z" fill="#4f7f5b"/>
+    <path d="M196 318c26-44 58-74 100-100" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round"/>
+  </svg>
+  <h1>EdenChat</h1>
+  <p id="say" role="status"><span class="dots">Opening</span></p>
+  <a id="go" class="btn" hidden>Open EdenChat</a>
+  <button id="again" class="btn quiet" hidden>Try again</button>
+</main>
+<script>
+/* This page only forwards. It asks where EdenChat is running right now (link.json, never cached),
+   checks that it answers, and goes there. EdenChat itself asks for a sign-in. */
+(function () {
+  var say = document.getElementById('say'), go = document.getElementById('go'), again = document.getElementById('again');
+  function show(text, link, retry) { say.textContent = text; go.hidden = !link; if (link) go.href = link; again.hidden = !retry; }
+  function find() {
+    show('', null, false); say.innerHTML = '<span class="dots">Opening</span>';
+    fetch('/link.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (d) {
+      var url = String(d.url || '');
+      if (!/^https:\/\/[a-z0-9.-]+$/.test(url)) throw 0;
+      var done = false, probe = new Image();
+      var fail = setTimeout(function () { if (!done) { done = true; show('EdenChat is not answering right now. The computer it runs on may be off.', url, true); } }, 8000);
+      probe.onload = function () { if (done) return; done = true; clearTimeout(fail); location.replace(url + '/' + location.hash); };
+      probe.onerror = function () { if (done) return; done = true; clearTimeout(fail); show('EdenChat is not running right now. Try again in a few minutes.', null, true); };
+      probe.src = url + '/icon.svg?t=' + Date.now();
+    }).catch(function () { show('Could not find where EdenChat is running. Try again in a few minutes.', null, true); });
+  }
+  again.onclick = find;
+  find();
+})();
+</script>
+</body>
+</html>
