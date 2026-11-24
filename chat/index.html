@@ -43,6 +43,16 @@
 (function () {
   var say = document.getElementById('say'), go = document.getElementById('go'), again = document.getElementById('again');
   function show(text, link, retry) { say.textContent = text; go.hidden = !link; if (link) go.href = link; again.hidden = !retry; }
+  /* Someone who opened the team link once is remembered here, on this page's own address, which never changes.
+     So the plain link keeps showing them "Who are you?" even after EdenChat itself has moved. */
+  function carry() {
+    var hash = location.hash, m = /[#&]team=([A-Za-z0-9]{6,40})/.exec(hash);
+    try {
+      if (m) localStorage.setItem('ec_team', m[1]);
+      else if (!/(invite|device)=/.test(hash)) { var kept = localStorage.getItem('ec_team'); if (kept) hash = '#team=' + kept; }
+    } catch (e) { /* private window: nothing is remembered */ }
+    return hash;
+  }
   function find() {
     show('', null, false); say.innerHTML = '<span class="dots">Opening</span>';
     fetch('/chat/link.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (d) {
@@ -50,7 +60,7 @@
       if (!/^https:\/\/[a-z0-9.-]+$/.test(url)) throw 0;
       var done = false, probe = new Image();
       var fail = setTimeout(function () { if (!done) { done = true; show('EdenChat is not answering right now. The computer it runs on may be off.', url, true); } }, 8000);
-      probe.onload = function () { if (done) return; done = true; clearTimeout(fail); location.replace(url + '/' + location.hash); };
+      probe.onload = function () { if (done) return; done = true; clearTimeout(fail); location.replace(url + '/' + carry()); };
       probe.onerror = function () { if (done) return; done = true; clearTimeout(fail); show('EdenChat is not running right now. Try again in a few minutes.', null, true); };
       probe.src = url + '/icon.svg?t=' + Date.now();
     }).catch(function () { show('Could not find where EdenChat is running. Try again in a few minutes.', null, true); });
