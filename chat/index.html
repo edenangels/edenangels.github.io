@@ -61,7 +61,9 @@
       var done = false, probe = new Image();
       var fail = setTimeout(function () { if (!done) { done = true; show('EdenChat is not answering right now. The computer it runs on may be off.', url, true); } }, 8000);
       probe.onload = function () { if (done) return; done = true; clearTimeout(fail); location.replace(url + '/' + carry()); };
-      probe.onerror = function () { if (done) return; done = true; clearTimeout(fail); show('EdenChat is not running right now. Try again in a few minutes.', null, true); };
+      /* The check can be refused although EdenChat is up: a device on the same private network as the server is not
+         allowed to test it from a public page. Opening it directly is always allowed, so go there and let it answer. */
+      probe.onerror = function () { if (done) return; done = true; clearTimeout(fail); location.replace(url + '/' + carry()); };
       probe.src = url + '/icon.svg?t=' + Date.now();
     }).catch(function () { show('Could not find where EdenChat is running. Try again in a few minutes.', null, true); });
   }
